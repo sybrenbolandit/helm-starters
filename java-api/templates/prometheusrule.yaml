@@ -1,0 +1,20 @@
+{{- if .Values.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "<CHARTNAME>.fullname" . }}
+  labels:
+    prometheus: sybrenbolandit
+    role: alert-rules
+spec:
+  groups:
+  - name: {{ include "<CHARTNAME>.fullname" . }}
+    rules:
+    - alert: NoHealthyHosts - {{ include "<CHARTNAME>.fullname" . }}
+      expr: sum(up{job="{{ include "<CHARTNAME>.fullname" . }}"}) < 1 or absent(up{job="{{ include "<CHARTNAME>.fullname" . }}"})
+      for: 30s
+      labels:
+        severity: critical
+      annotations:
+        summary: "No healthy hosts"
+{{- end }}

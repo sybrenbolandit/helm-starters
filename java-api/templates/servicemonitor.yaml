@@ -1,0 +1,19 @@
+{{- if .Values.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "<CHARTNAME>.fullname" . }}
+  labels:
+{{ include "<CHARTNAME>.labels" . | nindent 4 }}
+    prometheus: sybrenbolandit
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "<CHARTNAME>.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  endpoints:
+  - port: actuator
+    path: /actuator/prometheus
+  targetLabels:
+  - app.kubernetes.io/name
+{{- end }}

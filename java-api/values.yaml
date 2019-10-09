@@ -1,0 +1,26 @@
+environment: local
+
+image:
+  tag: latest
+  repository: sybrenbolandit/<CHARTNAME>
+  pullPolicy: Always
+
+metrics:
+  enabled: false
+
+logzio:
+  enabled: false
+
+autoscaling:
+  enabled: false
+
+livenessProbe:
+  enabled: false
+
+readinessProbe:
+  enabled: false
+
+resources: {}
+
+application.properties: |
+  TODO: add you application properties here

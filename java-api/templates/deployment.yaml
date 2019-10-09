@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "<CHARTNAME>.fullname" . }}
+  labels:
+{{ include "<CHARTNAME>.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "<CHARTNAME>.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+{{ include "<CHARTNAME>.labels" . | nindent 8 }}
+      annotations:
+        # This annotation ensures that pods are always recreated: https://github.com/helm/helm/issues/5218
+        timestamp: "{{date "20060102150405" .Release.Time}}"
+    spec:
+      terminationGracePeriodSeconds: 45
+      containers:
+        - name: {{ include "<CHARTNAME>.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          ports:
+            - name: http-web
+              containerPort: 8080
+            - name: http-actuator
+              containerPort: 8081
+          {{- if .Values.readinessProbe.enabled}}
+          readinessProbe:
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+            httpGet:
+              path: /actuator/health
+              port: 8081
+          {{- end }}
+          {{- if .Values.livenessProbe.enabled}}
+          livenessProbe:
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+            httpGet:
+              path: /actuator/health
+              port: 8081
+          {{- end}}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["curl", "-XPOST", "http://0.0.0.0:8081/actuator/shutdown"]
+          volumeMounts:
+            - name: application-config
+              mountPath: /srv/app/application.properties
+              subPath: application.properties
+            - name: varlog
+              mountPath: /var/log
+      volumes:
+        - name: application-config
+          configMap:
+            name: {{ include "<CHARTNAME>.fullname" . }}
+        - name: varlog
