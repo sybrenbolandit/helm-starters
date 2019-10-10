@@ -8,8 +8,8 @@ image:
 metrics:
   enabled: false
 
-logzio:
-  enabled: false
+ingress:
+  path: spring
 
 autoscaling:
   enabled: false

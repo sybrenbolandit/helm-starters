@@ -3,8 +3,8 @@ environment: test
 metrics:
   enabled: true
 
-logzio:
-  enabled: true
+ingress:
+  path: spring
 
 autoscaling:
   enabled: true
